@@ -1,0 +1,5 @@
+-define(ScheduleInterval,20*1000).
+-define(ConfigsGitPath,"https://github.com/joq62/configs.git").
+-define(ConfigsDir,filename:join(?ApplMgrConfigDir,"configs")).
+-define(ApplicationsDir,filename:join(?ConfigsDir,"applications")).
+-define(ApplMgrConfigDir,"appl_mgr.dir").
