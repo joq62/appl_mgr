@@ -77,7 +77,13 @@ update_app_specs(AppInfoList)->
 		   {error,Reason};
 	       {ok,AppFiles}->
 		   AppInfo=git_update_app_specs(AppFiles),
-		   {ok,AppInfo}
+		   case git_update_app_specs(AppFiles) of
+		       []->
+			   {ok,AppInfoList};
+		       Updates->
+			   %ToDo		
+			   {ok,AppInfoList}
+		   end
 	   end,
     Result.
 		   

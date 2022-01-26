@@ -61,13 +61,13 @@ appl_mgr()->
     ok=appl_mgr:git_load_configs(),
     {error,_}=appl_mgr:get_app_dir(dbase,"1.0.0"),
     ok=appl_mgr:load_app_specs(),
-    io:format(" ~p~n",[{appl_mgr:all_app_info(),?FUNCTION_NAME,?MODULE,?LINE}]),
+%    io:format(" ~p~n",[{appl_mgr:all_app_info(),?FUNCTION_NAME,?MODULE,?LINE}]),
     {ok,"dbase/1.0.0"}=appl_mgr:get_app_dir(dbase,"1.0.0"),
     {ok,"dbase/1.0.0"}=appl_mgr:get_app_dir(dbase,latest),
     
     ok=appl_mgr:update_app_specs(),
-    {ok,"dbase/1.0.0"}=appl_mgr:get_app_dir(myadd,"1.0.0"),
-    {ok,"dbase/1.0.0"}=appl_mgr:get_app_dir(myadd,latest),
+    {ok,"myadd/1.0.0"}=appl_mgr:get_app_dir(myadd,"1.0.0"),
+    {ok,"myadd/1.0.0"}=appl_mgr:get_app_dir(myadd,latest),
 
     
     
