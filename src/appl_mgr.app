@@ -2,9 +2,9 @@
 %% application.
 {application, appl_mgr,
 [{description, "Appl_Mgr application and cluster" },
-{vsn, "0.1.0" },
+{vsn, "1.0.0" },
 {modules, 
-	  [appl_mgr_app,appl_mgr,appl_mgr_sup,appl_mgr_server,lib_appl_mgr]},
+	  [appl_mgr_app,appl_mgr,appl_mgr_sup,appfile,lib_appl_mgr]},
 {registered,[appl_mgr]},
 {applications, [kernel,stdlib]},
 {mod, {appl_mgr_app,[]}},

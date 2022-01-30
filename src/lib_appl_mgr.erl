@@ -10,24 +10,20 @@
 %% Include files
 %% --------------------------------------------------------------------
 %-include("log.hrl").
--include("appl_mgr.hrl").
+%-include("appl_mgr.hrl").
+-include("configs.hrl").
 %%---------------------------------------------------------------------
 %% Records for test
 %%
-%-define(ScheduleInterval,20*1000).
-%-define(ConfigsGitPath,"https://github.com/joq62/configs.git").
-%-define(ConfigsDir,filename:join(?ApplMgrConfigDir,"configs")).
-%-define(ApplicationsDir,filename:join(?ConfigsDir,"applications")).
-%-define(ApplMgrConfigDir,"appl_mgr.dir").
+
 
 %% --------------------------------------------------------------------
 %-compile(export_all).
 
 -export([
-	 git_load_configs/0,
-	 load_app_specs/0,
-	 update_app_specs/1,
-	 get_app_dir/3,
+	 load_specs/0,
+	 update_specs/0,
+	 get_appl_dir/3,
 	 exists/2,
 	 exists/3
 	]).
@@ -41,19 +37,6 @@
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-git_load_configs()->
-    os:cmd("rm -rf "++?ApplMgrConfigDir),
-    ok=file:make_dir(?ApplMgrConfigDir),
-    ok=file:make_dir(?ConfigsDir),
-    os:cmd("git clone "++?ConfigsGitPath++" "++?ConfigsDir),
-    Result=case filelib:is_dir(?ApplicationsDir) of
-	       false->
-		   {error,[failed_create,?ApplMgrConfigDir,?ApplicationsDir]};
-	       true->
-		   ok
-	   end,
-    Result.   
-    
 
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -61,7 +44,7 @@ git_load_configs()->
 %% Returns: non
 %% --------------------------------------------------------------------
 
-load_app_specs()->
+load_specs()->
     Result=case get_appfiles() of
 	       {error,Reason}->
 		   {error,Reason};
@@ -71,18 +54,18 @@ load_app_specs()->
 	   end,
     Result.
 
-update_app_specs(AppInfoList)->
+update_specs()->
     Result=case get_appfiles() of
 	       {error,Reason}->
 		   {error,Reason};
 	       {ok,AppFiles}->
 		   AppInfo=git_update_app_specs(AppFiles),
-		   case git_update_app_specs(AppFiles) of
+		   case git_update_app_specs(AppInfo) of
 		       []->
-			   {ok,AppInfoList};
+			   {ok,AppInfo};
 		       Updates->
 			   %ToDo		
-			   {ok,AppInfoList}
+			   {ok,Updates}
 		   end
 	   end,
     Result.
@@ -92,7 +75,7 @@ update_app_specs(AppInfoList)->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-get_app_dir(App,latest,AppInfo)->
+get_appl_dir(App,latest,AppInfo)->
     AppList=[{XApp,XVsn,AppDir}||{XApp,XVsn,AppDir}<-AppInfo,
 			App=:=XApp],
     SortedAppList=lists:reverse(lists:keysort(2,AppList)),
@@ -104,7 +87,7 @@ get_app_dir(App,latest,AppInfo)->
 	   end,
     Result;
 
-get_app_dir(App,Vsn,AppInfo)->
+get_appl_dir(App,Vsn,AppInfo)->
     AppDirList=[AppDir||{XApp,XVsn,AppDir}<-AppInfo,
 			{App,Vsn}=:={XApp,XVsn}],
     Result=case AppDirList of
@@ -125,7 +108,7 @@ exists(App,AppInfo)->
     lists:keymember(App,1,AppInfo).
  
 exists(App,Vsn,AppInfo)->
-    Result=case get_app_dir(App,Vsn,AppInfo) of
+    Result=case get_appl_dir(App,Vsn,AppInfo) of
 	       {error,_}->
 		   false;
 	       _ -> 
@@ -139,12 +122,12 @@ exists(App,Vsn,AppInfo)->
 %% --------------------------------------------------------------------
 %% -------------------------------------------------------------------
 get_appfiles()->
-    Result=case filelib:is_dir(?ApplicationsDir) of
+    Result=case filelib:is_dir(?ApplSpecsDir) of
 	       false->
-		   {error,[eexists,?ApplicationsDir]};
+		   {error,[eexists,?ApplSpecsDir]};
 	       true->
-		   {ok,AllFiles}=file:list_dir(?ApplicationsDir),
-		   AppFiles=[{File,filename:join(?ApplicationsDir,File)}||File<-AllFiles,
+		   {ok,AllFiles}=file:list_dir(?ApplSpecsDir),
+		   AppFiles=[{File,filename:join(?ApplSpecsDir,File)}||File<-AllFiles,
 									  ".app"=:=filename:extension(File)],
 		   {ok,AppFiles}
 	   end,
@@ -157,15 +140,16 @@ get_appfiles()->
 %% Description: Initiate the eunit tests, set upp needed processes etc
 %% Returns: non
 %% --------------------------------------------------------------------
-git_load_app_specs(AppFiles)->
-    git_load_app_specs(AppFiles,[]).
+git_load_app_specs(AppInfo)->
+    git_load_app_specs(AppInfo,[]).
 
 git_load_app_specs([],LoadRes)->
     [{App,Vsn,AppDir}||{ok,App,Vsn,AppDir}<-LoadRes];
 git_load_app_specs([{_File,FullPath}|T],Acc)->
-    App=appfile:read(FullPath,application),
-    Vsn=appfile:read(FullPath,vsn),
-    GitPath=appfile:read(FullPath,git_path),
+    
+    {ok,App}=appfile:read(FullPath,application),
+    {ok,Vsn}=appfile:read(FullPath,vsn),
+    {ok,GitPath}=appfile:read(FullPath,git_path),
     AppTopDir=atom_to_list(App),
     AppDir=filename:join(AppTopDir,Vsn),
     NewAcc=case filelib:is_dir(AppTopDir) of
@@ -200,9 +184,9 @@ git_update_app_specs(AppFiles)->
 git_update_app_specs([],LoadRes)->
     [{App,Vsn,AppDir}||{ok,App,Vsn,AppDir}<-LoadRes];
 git_update_app_specs([{_File,FullPath}|T],Acc)->
-    App=appfile:read(FullPath,application),
-    Vsn=appfile:read(FullPath,vsn),
-    GitPath=appfile:read(FullPath,git_path),
+    {ok,App}=appfile:read(FullPath,application),
+    {ok,Vsn}=appfile:read(FullPath,vsn),
+    {ok,GitPath}=appfile:read(FullPath,git_path),
     AppTopDir=atom_to_list(App),
     AppDir=filename:join(AppTopDir,Vsn),
     NewAcc=case filelib:is_dir(AppTopDir) of
