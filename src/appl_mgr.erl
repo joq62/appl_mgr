@@ -128,7 +128,7 @@ load_specs()->
 %% --------------------------------------------------------------------
 init([]) ->
 
-    case rpc:call(node(),lib_appl_mgr,load_specs,[],5000) of 
+    case rpc:call(node(),lib_appl_mgr,load_specs,[],30*1000) of 
 	{error,_}->
 	    ApplInfoList=undefined;
 	{ok,ApplInfoList}->
