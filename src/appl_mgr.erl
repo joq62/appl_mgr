@@ -22,6 +22,7 @@
 
 %% External exports
 -export([
+	 get_info/3,
 	 get_all_appl_info/0,
 	 get_appl_dir/1,
 	 get_appl_dir/2,
@@ -58,6 +59,16 @@ stop()-> gen_server:call(?SERVER, {stop},infinity).
 %% Vm machine functions
 %% ====================================================================
 
+%%---------------------------------------------------------------
+%% Function:get_info(App,Vsn,Type)
+%% @doc: resturns value appfile related to App,Vsn and type      
+%% @param: Application,Vsn anad Type
+%% @returns:{ok,Value}|{error,[eexists,App,Vsn]}|{error,[undefined, App,Vsn,Type]}
+%%
+%%---------------------------------------------------------------
+-spec get_info(atom(),string(),atom())-> {term()}|{atom(),term()}.
+get_info(App,Vsn,Type)->
+    gen_server:call(?SERVER,{get_info,App,Vsn,Type},infinity).
 
 %%---------------------------------------------------------------
 %% Function:get_all_appl_info()
@@ -128,7 +139,7 @@ load_specs()->
 %% --------------------------------------------------------------------
 init([]) ->
 
-    case rpc:call(node(),lib_appl_mgr,load_specs,[],30*1000) of 
+    ok=case rpc:call(node(),lib_appl_mgr,load_specs,[],30*1000) of 
 	{error,_}->
 	    ApplInfoList=undefined;
 	{ok,ApplInfoList}->
@@ -150,6 +161,17 @@ init([]) ->
 %%          {stop, Reason, Reply, State}   | (terminate/2 is called)
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% --------------------------------------------------------------------
+handle_call({get_info,App,Vsn,Type},_From, State) ->
+    
+    Reply=case lists:keyfind({App,Vsn},1,State#state.appl_info) of
+	      false->
+		  {error,[eexists,App,Vsn]};
+	      AppInfo->
+		  {ok,AppInfo}
+	  end,
+    {reply, Reply, State};
+
+
 handle_call({get_all_appl_info},_From, State) ->
     Reply=case State#state.appl_info of
 	      undefined->

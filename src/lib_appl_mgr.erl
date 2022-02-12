@@ -144,7 +144,7 @@ git_load_app_specs(AppInfo)->
     git_load_app_specs(AppInfo,[]).
 
 git_load_app_specs([],LoadRes)->
-    [{App,Vsn,AppDir}||{ok,App,Vsn,AppDir}<-LoadRes];
+    [{{App,Vsn},AppDir}||{ok,App,Vsn,AppDir}<-LoadRes];
 git_load_app_specs([{_File,FullPath}|T],Acc)->
     
     {ok,App}=appfile:read(FullPath,application),
